@@ -85,12 +85,12 @@ const oversizeExists = (line) => {
     return true;
 }
 
-// オーバーサイズルビがある場合、何文字超過するか返す
-// 超過する文字数よりも、何文字にしたら一行に収まるか返した方がいいね
-const getNumOfExcessChars = (line) => {
+// オーバーサイズルビがある場合、何文字にしたら一行に収まるか返す
+const getIndexOfLineBreak = (line) => {
     let str = line;
     let num = 0;
-    let excessSum = 0;
+    let max = maxChars; // 一行の最大文字数は、オーバーサイズルビによって減少する
+    // let excessSum = 0;
     while(true){
         if(str.substr(num, 1) === "｜"
             && str.substr(num, 2) !== "《")
@@ -103,19 +103,20 @@ const getNumOfExcessChars = (line) => {
             console.log("str: " + str);
             console.log("rb: " + rb);
             console.log("rt: " + rt);
-            let excess = 0;
+            // let excess = 0;
             if(rt > rb * 2){
                 // 漢字1文字に対しフリガナ3文字だと、スケールは1.5文字分となる。よって最後に Math.ceil
-                excess = rt / 2 - rb;
-                excessSum += excess;
+                const excess = rt / 2 - rb;
+                max -= excess; // 超過文字分を、最大文字数から引く
                 console.log("excess: " + excess);
-                console.log("excessSum: " + excessSum);
+                console.log("max: " + max);
             }
-            if(num + rb + excess > maxChars){
-                return Math.ceil(excessSum);
+            if(num + rb > max){
+                return Math.floor(max);
             } else {
-                // 堕天男　｜堕天男《ルシファー》
-                num += rb + excess;
+                // 堕天男 -> ｜堕天男《ルシファー》　幅が変わらないので、記号とフリガナ、8文字の増加（フリガナ＋３）
+                // 母 -> ｜母《チート》　幅が0.5文字分増える、6文字（フリガナ＋３）増加するが、ルビの増加分、残り文字数が減る
+                num += rt + 3;
             }
             // str = str.replace(/｜(.*)《(.*)》/, "‖$1≪$2≫"); // なぜか二重山括弧だけ2番め以降が変換される
             str = str.replace("｜", "‖");
@@ -123,7 +124,7 @@ const getNumOfExcessChars = (line) => {
             str = str.replace("》", "≫");
         }
         if(num >= maxChars){
-            return Math.ceil(excessSum);
+            return Math.floor(max);
         } else {
             num++;
         }
@@ -156,11 +157,12 @@ const separateLine = (line) => {
 // const replaced = str.replace(/｜《(.*)》/g, "〈〈$1〉〉");
 // console.log(replaced);
 
-const testLine2 = "１２３４５｜６《だだだだだだ》７８９｜０《ぜろす》１２３４５｜６《シックスセックス》７８９０１２３４５６７８９０１２３４５６７８９０１２３４５６７８９０１２３４５６７８９０";
+const testLine2 = "１２３４５｜６《だだだだだ》７８９｜０《ぜろ》１２３４５｜６《シックス》７８９０１２３４５６７８９０１２３４５６７８９０１２３４５６７８９０１２３４５６７８９０";
 
 // console.log(testLine2.replace(/｜(.*)《(.*)》/, "‖$1≪$2≫"));
 
-console.log(getNumOfExcessChars(testLine2));
+console.log("maxChars: " + maxChars);
+console.log(getIndexOfLineBreak(testLine2));
 
 let newP = document.createElement("p");
 newP.innerHTML = encodeRuby(testLine);

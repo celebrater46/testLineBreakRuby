@@ -1,0 +1,48 @@
+// オーバーサイズルビがある場合、何文字超過するか返す
+// 超過する文字数よりも、何文字にしたら一行に収まるか返した方がいいね
+const getNumOfExcessChars = (line) => {
+    let str = line;
+    let num = 0;
+    let excessSum = 0;
+    while(true){
+        if(str.substr(num, 1) === "｜"
+            && str.substr(num, 2) !== "《")
+        {
+            const bar = str.indexOf("｜");
+            const start = str.indexOf("《");
+            const end = str.indexOf("》");
+            const rb = start - bar - 1; // 漢字の文字数
+            const rt = end - start -1; // フリガナの文字数
+            console.log("str: " + str);
+            console.log("rb: " + rb);
+            console.log("rt: " + rt);
+            let excess = 0;
+            if(rt > rb * 2){
+                // 漢字1文字に対しフリガナ3文字だと、スケールは1.5文字分となる。よって最後に Math.ceil
+                excess = rt / 2 - rb;
+                excessSum += excess;
+                console.log("excess: " + excess);
+                console.log("excessSum: " + excessSum);
+            }
+            if(num + rb + excess > maxChars){
+                return Math.ceil(excessSum);
+            } else {
+                // 堕天男　｜堕天男《ルシファー》
+                num += rb + excess;
+            }
+            // str = str.replace(/｜(.*)《(.*)》/, "‖$1≪$2≫"); // なぜか二重山括弧だけ2番め以降が変換される
+            str = str.replace("｜", "‖");
+            str = str.replace("《", "≪");
+            str = str.replace("》", "≫");
+        }
+        if(num >= maxChars){
+            return Math.ceil(excessSum);
+        } else {
+            num++;
+        }
+        if(num > 5000){
+            return -1; // 無限ループエラー対策
+        }
+    }
+
+}
