@@ -1,0 +1,59 @@
+@charset "UTF-8";
+
+html{
+    font-size: 19px;
+}
+
+body {
+    background-color: black;
+    color: silver;
+    text-align: center;
+    /*font-family: 'Helvetica Neue',Helvetica,Arial,'ヒラギノ角ゴ Pr6N','Hiragino Kaku Gothic Pr6N','ヒラギノ角ゴ ProN','Hiragino Kaku Gothic ProN','ヒラギノ角ゴ StdN','Hiragino Kaku Gothic StdN','Segoe UI',Verdana,'メイリオ',Meiryo,sans-serif;*/
+    /*font-family: "Meiryo", "MS Mincho", "游明朝", "Hiragino Kaku Gothic ProN W3", "Helvetica", "Tahoma";*/
+    /*font-family: 'Noto Serif JP', 'Kosugi', 'Noto Sans JP', 'Shippori Mincho', Sawarabi Mincho, Sawarabi Gothic, Hiragino Kaku Gothic ProN W3, Helvetica, Meiryo, Tahoma;*/
+    font-family: 'Noto Serif JP', 'Kosugi', Hiragino Kaku Gothic ProN W3, Helvetica, Meiryo, Tahoma;
+    /*'Noto Serif JP', 'Kosugi', 'Noto Sans JP', 'Shippori Mincho' は縦書きにしてもレイアウトが大きく崩れない。特に前のふたつが縦書きでもきれいに表示される。 */
+}
+
+div#box{
+    width: 310vw;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+div.page{
+    width: 80vw;
+    height: 77vh;
+    padding: 5vh 5vw;
+    margin: 5vh 5vw;
+    background-color: #333333;
+    writing-mode: vertical-rl;
+    /*text-orientation: mixed;*/
+}
+
+/*span.rotate{*/
+/*    display: inline-block;*/
+/*    !*text-combine-upright: all;*!*/
+/*    !*text-orientation: upright;*!*/
+/*    !*text-orientation: sideways;*!*/
+/*    transform:rotate(90deg);*/
+/*}*/
+
+p{
+    font-size: 1rem;
+    text-align: left;
+    margin: 0;
+    padding: 0;
+}
+
+a{
+    color: goldenrod;
+    text-decoration: none;
+}
+
+a:hover{
+    color: gold;
+}
