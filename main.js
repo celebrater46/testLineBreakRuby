@@ -10,38 +10,6 @@ const fontSize = 20;
 const maxChars = Math.floor(maxWidth / fontSize); // 1行あたりの最大文字数
 const testLine = "「あのさ、｜空《スウィート・スカイ・ハニー》ちゃん。｜今度《ネクスト》の｜休み《ヴァケーション》、よかったら｜ご飯《サイゼ》でも一緒にどうかな。なんて」";
 
-// エスケープした山括弧を元に戻す
-const getBackMountBracket = (line) => {
-    let str = line;
-    str = str.replace(/〈〈/g, "《");
-    str = str.replace(/〉〉/g, "》");
-    return str;
-}
-
-// 「｜《」など、山括弧をそのまま使いたい場合のエスケープ処理
-// 《》をいったん〈〈　〉〉に変換する
-const escapeMountBracket = (line) => {
-    // const zenkaku = /(?:[　！”＃＄％＆’（）＊＋，－．／：；＜＝＞？＠［￥］＾＿‘｛｜｝￣])|(?:[、。・゛゜´｀¨ヽヾゝゞ〃仝々〆〇ー―‐＼～～∥…‥“〔〕〈〉《》「」『』【】±×÷≠≦≧∞∴♂♀°′″℃￠￡§☆★○●◎◇◇◆□■△▲▽▼※〒→←↑↓〓])|(?:[０-９])|(?:[Ａ-Ｚ])|(?:[ａ-ｚ])|(?:[ぁ-ん])|(?:[ァ-ヶ])|(?:[Α-Ωα-ω])|(?:[А-Яа-я])|(?:[\u2570-\u25ff])|(?:[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff])/g;
-    if(line.indexOf("｜《") > -1){
-        // const line = "<6>大晦日</6>";
-        // const replaced = line.replace(/\<([1-7])\>(.*)\<\/.\>/g, "<span class='f$1'>$2</span>"); // <span class='f6'>大晦日</span>
-        return line.replace(/｜《(.*)》/g, "〈〈$1〉〉");
-    }
-    return  line;
-}
-
-const encodeRuby = (line) => {
-    if(line.indexOf("｜") > -1
-        && line.indexOf("《") > -1
-        && line.indexOf("》") > -1)
-    {
-        return line.replace(
-            /｜(.*)《(.*)》/g,
-            "<ruby><rb>$1</rb><rp>(</rp><rt>$2</rt><rp>)</rp></ruby>"
-        );
-    }
-    return line;
-}
 
 // 実際に appendChild() することなく、オーバーサイズルビ含む行を数値計算だけで分割する
 // 1行あたりの最大文字数内にオーバーサイズルビがあるか確認する
@@ -67,16 +35,56 @@ const encodeRuby = (line) => {
 //     }
 // }
 
+// エスケープした山括弧を元に戻す
+const getBackMountBracket = (line) => {
+    let str = line;
+    str = str.replace(/〈〈([^〉]+)〉〉/g, "《$1》");
+    // str = str.replace(/〈〈/g, "《");
+    // str = str.replace(/〉〉/g, "》");
+    return str;
+}
+
+// 「｜《」など、山括弧をそのまま使いたい場合のエスケープ処理
+// 《》をいったん〈〈　〉〉に変換する
+const escapeMountBracket = (line) => {
+    // const zenkaku = /(?:[　！”＃＄％＆’（）＊＋，－．／：；＜＝＞？＠［￥］＾＿‘｛｜｝￣])|(?:[、。・゛゜´｀¨ヽヾゝゞ〃仝々〆〇ー―‐＼～～∥…‥“〔〕〈〉《》「」『』【】±×÷≠≦≧∞∴♂♀°′″℃￠￡§☆★○●◎◇◇◆□■△▲▽▼※〒→←↑↓〓])|(?:[０-９])|(?:[Ａ-Ｚ])|(?:[ａ-ｚ])|(?:[ぁ-ん])|(?:[ァ-ヶ])|(?:[Α-Ωα-ω])|(?:[А-Яа-я])|(?:[\u2570-\u25ff])|(?:[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff])/g;
+    if(line.indexOf("｜《") > -1){
+        // const line = "<6>大晦日</6>";
+        // const replaced = line.replace(/\<([1-7])\>(.*)\<\/.\>/g, "<span class='f$1'>$2</span>"); // <span class='f6'>大晦日</span>
+        return line.replace(/｜《([^\x01-\x7E]*)》/g, "〈〈$1〉〉");
+    }
+    return  line;
+}
+
+const encodeRuby = (line) => {
+    if(line.indexOf("｜") > -1
+        && line.indexOf("《") > -1
+        && line.indexOf("》") > -1)
+    {
+        return line.replace(
+            /｜([^《]+)《([^》]+)》/g,
+            "<ruby><rb>$1</rb><rp>(</rp><rt>$2</rt><rp>)</rp></ruby>"
+        );
+    }
+    return line;
+}
+
 // encodeRuby() の逆
 const decodeRuby = (line) => {
     let str = line;
-    if(str.indexOf("<ruby><rb>") > -1
-        && str.indexOf("</rb><rp>(</rp><rt>") > -1
-        && str.indexOf("</rt><rp>)</rp></ruby>") > -1)
+    // if(str.search(/<ruby><rb>[^\x01-\x7E]+<\/rb><rp>\(<\/rp><rt>[^\x01-\x7E]+<\/rt><rp>\)<\/rp><\/ruby>/) > -1)
+    if(str.indexOf("<ruby><rb>") > -1)
+    // if(str.indexOf("<ruby><rb>") > -1
+    //     && str.indexOf("</rb><rp>(</rp><rt>") > -1
+    //     && str.indexOf("</rt><rp>)</rp></ruby>") > -1)
     {
-        str = str.replace(/<ruby><rb>/g, "｜");
-        str = str.replace(/<\/rb><rp>\(<\/rp><rt>/g, "《");
-        str = str.replace(/<\/rt><rp>\)<\/rp><\/ruby>/g, "》");
+        str = str.replace(
+            /<ruby><rb>([^\x01-\x7E]+)<\/rb><rp>\(<\/rp><rt>([^\x01-\x7E]+)<\/rt><rp>\)<\/rp><\/ruby>/g,
+            "｜$1《$2》"
+        );
+        // str = str.replace(/<ruby><rb>/g, "｜");
+        // str = str.replace(/<\/rb><rp>\(<\/rp><rt>/g, "《");
+        // str = str.replace(/<\/rt><rp>\)<\/rp><\/ruby>/g, "》");
         return str;
     }
 }
@@ -90,7 +98,6 @@ const getIndexOfLineBreak = (line) => {
     let str = line;
     let num = 0;
     let max = maxChars; // 一行の最大文字数は、オーバーサイズルビによって減少する
-    // let excessSum = 0;
     while(true){
         if(str.substr(num, 1) === "｜"
             && str.substr(num, 2) !== "《")
@@ -103,20 +110,20 @@ const getIndexOfLineBreak = (line) => {
             console.log("str: " + str);
             console.log("rb: " + rb);
             console.log("rt: " + rt);
-            // let excess = 0;
             if(rt > rb * 2){
                 // 漢字1文字に対しフリガナ3文字だと、スケールは1.5文字分となる。よって最後に Math.ceil
                 const excess = rt / 2 - rb;
                 max -= excess; // 超過文字分を、最大文字数から引く
-                console.log("excess: " + excess);
-                console.log("max: " + max);
+                // console.log("excess: " + excess);
+                // console.log("max: " + max);
             }
             if(num + rb > max){
                 return Math.floor(max);
             } else {
                 // 堕天男 -> ｜堕天男《ルシファー》　幅が変わらないので、記号とフリガナ、8文字の増加（フリガナ＋３）
                 // 母 -> ｜母《チート》　幅が0.5文字分増える、6文字（フリガナ＋３）増加するが、ルビの増加分、残り文字数が減る
-                num += rt + 3;
+                // num += rt + 3;
+                max += rt + 3;
             }
             // str = str.replace(/｜(.*)《(.*)》/, "‖$1≪$2≫"); // なぜか二重山括弧だけ2番め以降が変換される
             str = str.replace("｜", "‖");
@@ -136,18 +143,39 @@ const getIndexOfLineBreak = (line) => {
 }
 
 const separateLine = (line) => {
-    const ruby = line.indexOf("<ruby>");
+    // const ruby = line.indexOf("<ruby>");
+    const ruby = line.indexOf("｜");
     if(ruby > -1 && ruby < maxChars){
-        if(oversizeExists()){
-
-        }
+        // ルビが１行内にあるなら、新しい改行ポイント indexOf を取得
+        const lineBreak = getIndexOfLineBreak(line);
         // console.log("ruby exists");
-        return [line.substr(0, maxChars), line.substr(maxChars)];
+        console.log("lineBreak: " + lineBreak);
+        // １行で収まりきらない場合は分割
+        if(line.length > lineBreak){
+            return [line.substr(0, lineBreak), line.substr(lineBreak)];
+        }
     } else {
-        return [line.substr(0, maxChars), line.substr(maxChars)];
+        if(line.length > maxChars){
+            return [line.substr(0, maxChars), line.substr(maxChars)];
+        }
     }
+    return [line, null];
 }
 
+const addP = (line) => {
+    const array = separateLine(testLine);
+    console.log("array");
+    console.log(array);
+    console.log("array[0]: " + array[0]);
+    let p = document.createElement("p");
+    const encoded = encodeRuby(array[0]);
+    console.log(encoded);
+    p.innerHTML = encoded;
+    div.appendChild(p);
+}
+
+console.log(separateLine(testLine));
+addP();
 // console.log(separateLine(encodeRuby(testLine)));
 // const str = "俺の名は｜堕天男《ルシファー》。";
 // const replaced = str.replace(/｜(.*)《(.*)》/g, "<ruby><rb>$1</rb><rp>(</rp><rt>$2</rt><rp>)</rp></ruby>");
@@ -161,9 +189,9 @@ const testLine2 = "１２３４５｜６《だだだだだ》７８９｜０《�
 
 // console.log(testLine2.replace(/｜(.*)《(.*)》/, "‖$1≪$2≫"));
 
-console.log("maxChars: " + maxChars);
-console.log(getIndexOfLineBreak(testLine2));
+// console.log("maxChars: " + maxChars);
+// console.log(getIndexOfLineBreak(testLine2));
 
-let newP = document.createElement("p");
-newP.innerHTML = encodeRuby(testLine);
-div.appendChild(newP);
+// let newP = document.createElement("p");
+// newP.innerHTML = encodeRuby(testLine);
+// div.appendChild(newP);
