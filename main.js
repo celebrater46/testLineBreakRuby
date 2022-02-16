@@ -21,34 +21,26 @@ const getBackMountBracket = (line) => {
 // 「｜《」など、山括弧をそのまま使いたい場合のエスケープ処理
 // 《》をいったん〈〈　〉〉に変換する
 const escapeMountBracket = (line) => {
-    let str = line;
-    // 文字列.replace(正規表現, 新しい文字列)
-    // const rubyPtn = <ruby><rb>試験</rb><rp>(</rp><rt>テスト</rt><rp>)</rp></ruby>;
     // const zenkaku = /(?:[　！”＃＄％＆’（）＊＋，－．／：；＜＝＞？＠［￥］＾＿‘｛｜｝￣])|(?:[、。・゛゜´｀¨ヽヾゝゞ〃仝々〆〇ー―‐＼～～∥…‥“〔〕〈〉《》「」『』【】±×÷≠≦≧∞∴♂♀°′″℃￠￡§☆★○●◎◇◇◆□■△▲▽▼※〒→←↑↓〓])|(?:[０-９])|(?:[Ａ-Ｚ])|(?:[ａ-ｚ])|(?:[ぁ-ん])|(?:[ァ-ヶ])|(?:[Α-Ωα-ω])|(?:[А-Яа-я])|(?:[\u2570-\u25ff])|(?:[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff])/g;
-    if(str.indexOf("｜《") > -1){
-        // const str = "<6>大晦日</6>";
-        // const replaced = str.replace(/\<([1-7])\>(.*)\<\/.\>/g, "<span class='f$1'>$2</span>"); // <span class='f6'>大晦日</span>
-        // const replaced = str.replace(/｜(.*)《(.*)》/g, "<ruby><rb>$1</rb><rp>(</rp><rt>$2</rt><rp>)</rp></ruby>");
+    if(line.indexOf("｜《") > -1){
+        // const line = "<6>大晦日</6>";
+        // const replaced = line.replace(/\<([1-7])\>(.*)\<\/.\>/g, "<span class='f$1'>$2</span>"); // <span class='f6'>大晦日</span>
+        return line.replace(/｜《(.*)》/g, "〈〈$1〉〉");
     }
-
-    // while(str.indexOf("｜《") > -1){
-    //     const index = str.indexOf("｜《");
-    //     let strAfterBar = str.substr(index);
-    //     strAfterBar = strAfterBar.replace("｜《", "〈〈");
-    //     strAfterBar = strAfterBar.replace("》", "〉〉");
-    //     str = str.substr(0, index) + strAfterBar;
-    // }
-    return  str;
+    return  line;
 }
 
 const encodeRuby = (line) => {
-    let str = line;
-    if(str.indexOf("｜") > -1 && str.indexOf("《") > -1 && str.indexOf("》") > -1){
-        // str = str.replace(/｜/g, "<ruby><rb>");
-        // str = str.replace(/《/g, "</rb><rp>(</rp><rt>");
-        // str = str.replace(/》/g, "</rt><rp>)</rp></ruby>");
+    if(line.indexOf("｜") > -1
+        && line.indexOf("《") > -1
+        && line.indexOf("》") > -1)
+    {
+        return line.replace(
+            /｜(.*)《(.*)》/g,
+            "<ruby><rb>$1</rb><rp>(</rp><rt>$2</rt><rp>)</rp></ruby>"
+        );
     }
-    return str;
+    return line;
 }
 
 // 実際に appendChild() することなく、オーバーサイズルビ含む行を数値計算だけで分割する
@@ -93,6 +85,55 @@ const oversizeExists = (line) => {
     return true;
 }
 
+// オーバーサイズルビがある場合、何文字超過するか返す
+// 超過する文字数よりも、何文字にしたら一行に収まるか返した方がいいね
+const getNumOfExcessChars = (line) => {
+    let str = line;
+    let num = 0;
+    let excessSum = 0;
+    while(true){
+        if(str.substr(num, 1) === "｜"
+            && str.substr(num, 2) !== "《")
+        {
+            const bar = str.indexOf("｜");
+            const start = str.indexOf("《");
+            const end = str.indexOf("》");
+            const rb = start - bar - 1; // 漢字の文字数
+            const rt = end - start -1; // フリガナの文字数
+            console.log("str: " + str);
+            console.log("rb: " + rb);
+            console.log("rt: " + rt);
+            let excess = 0;
+            if(rt > rb * 2){
+                // 漢字1文字に対しフリガナ3文字だと、スケールは1.5文字分となる。よって最後に Math.ceil
+                excess = rt / 2 - rb;
+                excessSum += excess;
+                console.log("excess: " + excess);
+                console.log("excessSum: " + excessSum);
+            }
+            if(num + rb + excess > maxChars){
+                return Math.ceil(excessSum);
+            } else {
+                // 堕天男　｜堕天男《ルシファー》
+                num += rb + excess;
+            }
+            // str = str.replace(/｜(.*)《(.*)》/, "‖$1≪$2≫"); // なぜか二重山括弧だけ2番め以降が変換される
+            str = str.replace("｜", "‖");
+            str = str.replace("《", "≪");
+            str = str.replace("》", "≫");
+        }
+        if(num >= maxChars){
+            return Math.ceil(excessSum);
+        } else {
+            num++;
+        }
+        if(num > 5000){
+            return -1; // 無限ループエラー対策
+        }
+    }
+
+}
+
 const separateLine = (line) => {
     const ruby = line.indexOf("<ruby>");
     if(ruby > -1 && ruby < maxChars){
@@ -107,9 +148,19 @@ const separateLine = (line) => {
 }
 
 // console.log(separateLine(encodeRuby(testLine)));
-const str = "俺の名は｜堕天男《ルシファー》。";
-const replaced = str.replace(/｜(.*)《(.*)》/g, "<ruby><rb>$1</rb><rp>(</rp><rt>$2</rt><rp>)</rp></ruby>");
-console.log(replaced);
+// const str = "俺の名は｜堕天男《ルシファー》。";
+// const replaced = str.replace(/｜(.*)《(.*)》/g, "<ruby><rb>$1</rb><rp>(</rp><rt>$2</rt><rp>)</rp></ruby>");
+// console.log(replaced);
+
+// const str = "俺の名は｜《ルシファー》――";
+// const replaced = str.replace(/｜《(.*)》/g, "〈〈$1〉〉");
+// console.log(replaced);
+
+const testLine2 = "１２３４５｜６《だだだだだだ》７８９｜０《ぜろす》１２３４５｜６《シックスセックス》７８９０１２３４５６７８９０１２３４５６７８９０１２３４５６７８９０１２３４５６７８９０";
+
+// console.log(testLine2.replace(/｜(.*)《(.*)》/, "‖$1≪$2≫"));
+
+console.log(getNumOfExcessChars(testLine2));
 
 let newP = document.createElement("p");
 newP.innerHTML = encodeRuby(testLine);
