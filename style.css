@@ -21,9 +21,16 @@ div.page{
 
 p{
     font-size: 1rem;
-    text-align: left;
+    /*text-align: left;*/
     margin: 0;
     padding: 0;
+    text-align: justify;
+    line-height: 150%;
+}
+
+p#final_line{
+    overflow: hidden;
+    /*height: 35px;*/
 }
 
 a{

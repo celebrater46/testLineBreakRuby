@@ -168,12 +168,14 @@ const separateLine = (line) => {
         // const encoded = encodeRuby(line);
         // １行で収まりきらない場合は分割
         if(line.length > lineBreak){
-            return [line.substr(0, lineBreak), line.substr(lineBreak)];
+            return line.substr(lineBreak);
+            // return [line.substr(0, lineBreak), line.substr(lineBreak)];
             // return [encoded.substr(0, lineBreak), encoded.substr(lineBreak)];
         }
     } else {
         if(line.length > maxChars){
-            return [line.substr(0, maxChars), line.substr(maxChars)];
+            return line.substr(maxChars);
+            // return [line.substr(0, maxChars), line.substr(maxChars)];
             // return [encoded.substr(0, maxChars), encoded.substr(maxChars)];
         }
     }
@@ -181,13 +183,22 @@ const separateLine = (line) => {
 }
 
 const addP = (line) => {
-    const array = separateLine(testLine);
-    console.log("array");
-    console.log(array);
-    console.log("array[0]: " + array[0]);
+    // const array = separateLine(testLine);
+    const remain = separateLine(testLine);
+    // console.log("array");
+    // console.log(array);
+    // console.log("array[0]: " + array[0]);
     let p = document.createElement("p");
-    const encoded = encodeRuby(array[0]);
-    console.log(encoded);
+    // const encoded = encodeRuby(array[0]);
+    const encoded = encodeRuby(testLine);
+    console.log("encoded: " + encoded);
+    console.log("remain: " + remain);
+    p.id = ("final_line");
+    if(encoded.indexOf("<ruby>") > -1){
+        p.style.height = rubyLineHeight + "px";
+    } else {
+        p.style.height = lineHeight + "px";
+    }
     p.innerHTML = encoded;
     div.appendChild(p);
 }
@@ -216,12 +227,17 @@ const testLine2 = "１２３４５｜６《だだだだだ》７８９｜０《�
 
 
 
+// $#########$#########$#########$#########$#########
+// メモ
 
 // ルビ指定の途中で改行されている。正規表現を使ってルビ指定全体を抽出した方が確実に処理できるかも。
 // ルビエンコードを実行しても、たぶんタグの途中で改行される
-
 // 改行ポイントがルビ指定の途中かどうかチェックして、途中なら改行ポイントを後ろにずらす必要がありそう。
 
+
+
+// $#########$#########$#########$#########$#########
+// 220217
 
 // 改行ポイントがルビ指定の途中であるパターンは、
 
@@ -230,3 +246,14 @@ const testLine2 = "１２３４５｜６《だだだだだ》７８９｜０《�
 // C「ルビ自体は行に収まる通常ルビ」パターン
 // D「ルビは行に収まらない通常ルビ」パターン
 
+
+// ページの最後の行、実際に1行に収まる文字数に切り取ってしまうと、
+// 均等割り付けがうまく機能しない問題が生じるようだ。
+// これを回避するには、実際には文字の切り取りは行わずに、2行目以降が見えなくなるようにするのがいい
+
+// 結論。計算だけでオーバーサイズルビありの行を正確に切り抜くのは
+// フォントや前後の文字との関係によってスケールが複雑に変化するので困難を極める。
+// 従来の実際に文字を追加していって実測する仕組みの方が確実であり、
+// overflow: hidden にして実際には P タグの中に全文字入れて 2 行目以降を
+// 非表示とすることで大きなレイアウト崩れを裂けつつ均等割り付けを適用するのが
+// 最適解かと思われる。
