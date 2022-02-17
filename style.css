@@ -8,6 +8,7 @@ body {
     background-color: black;
     color: silver;
     text-align: center;
+    font-family: 'Kosugi', 'Noto Serif JP', Hiragino Kaku Gothic ProN W3, Helvetica, Meiryo, Tahoma;
 }
 
 div.page{
